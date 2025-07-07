@@ -3,9 +3,6 @@ import io
 import csv
 import sqlite3
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import smtplib
 from flask import Flask, render_template_string, request, session, redirect, url_for, send_file, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import logging
@@ -15,14 +12,195 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))  # Use environment variable for secret key
-app.config['SESSION_COOKIE_SECURE'] = True  # Secure cookies in production
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
+app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # Session timeout after 1 hour
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
 # Database configuration
 DATABASE = 'healthbuddy.db'
 
+# Global translations dictionary
+translations = {
+    "en": {
+        "title": "HealthBuddy - Your Wellness Companion",
+        "intro": "Your personal wellness companion – enter your details for tailored health advice!",
+        "learn_health": "Learn About Healthy Living",
+        "weight_label": "Weight (kg):",
+        "height_label": "Height (cm):",
+        "age_label": "Age:",
+        "gender_label": "Gender:",
+        "activity_label": "Activity Level:",
+        "chronic_diseases_label": "Chronic Diseases:",
+        "sleep_hours_label": "Hours of Sleep per Night:",
+        "sleep_consistency_label": "Regular Bedtime?:",
+        "sleep_disturbances_label": "Sleep Disturbances:",
+        "substance_use_label": "Substance Use (e.g., alcohol, tobacco):",
+        "menstrual_regularity_label": "Menstrual Cycle Regularity:",
+        "pregnancy_history_label": "Pregnancy History:",
+        "contraceptive_use_label": "Contraceptive Use:",
+        "submit": "Get Your Health Advice",
+        "select_gender": "Select gender",
+        "select_activity": "Select activity level",
+        "male": "Male",
+        "female": "Female",
+        "low": "Low (sedentary)",
+        "moderate": "Moderate (light exercise)",
+        "high": "High (active, regular exercise)",
+        "yes": "Yes",
+        "no": "No",
+        "regular": "Regular",
+        "irregular": "Irregular",
+        "none": "None",
+        "insomnia": "Insomnia",
+        "waking_tired": "Waking up tired",
+        "has_pregnancy": "Yes, previous pregnancies",
+        "no_pregnancy": "No pregnancies",
+        "contraceptive_none": "None",
+        "contraceptive_pill": "Pill",
+        "contraceptive_iud": "IUD",
+        "report_title": "Your Personalized Health Report",
+        "water_intake_title": "Recommended Daily Water Intake",
+        "health_tips_title": "Personalized Health Tips",
+        "bmi_label": "BMI:",
+        "dialog_title": "Healthy Living Tips",
+        "dialog_content": """
+            Adopting a healthy lifestyle can significantly improve your well-being. Here are some key tips:
+            <ul>
+                <li><strong>Stay Hydrated:</strong> Drink adequate water daily based on your weight and activity level. <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank">Learn more</a>.</li>
+                <li><strong>Balanced Diet:</strong> Include nutrient-rich foods like fruits, vegetables, whole grains, and lean proteins. <a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" target="_blank">Learn more</a>.</li>
+                <li><strong>Regular Exercise:</strong> Aim for at least 150 minutes of moderate activity weekly to boost physical health. <a href="https://www.cdc.gov/physical-activity-basics/index.html" target="_blank">Learn more</a>.</li>
+                <li><strong>Adequate Sleep:</strong> Prioritize 7-9 hours of quality sleep nightly to support recovery and mental clarity. <a href="https://www.sleepfoundation.org/how-sleep-works" target="_blank">Learn more</a>.</li>
+                <li><strong>Mental Health:</strong> Practice mindfulness, meditation, or hobbies to manage stress effectively. <a href="https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/mindfulness" target="_blank">Learn more</a>.</li>
+                <li><strong>Chronic Disease Management:</strong> Regular check-ups and adherence to medical advice are crucial for managing conditions like diabetes or hypertension. <a href="https://www.cdc.gov/chronic-disease/index.html" target="_blank">Learn more</a>.</li>
+                <li><strong>Substance Avoidance:</strong> Limit or avoid alcohol and tobacco to reduce health risks. <a href="https://www.who.int/news-room/fact-sheets/detail/tobacco" target="_blank">Learn more</a>.</li>
+                <li><strong>Reproductive Health:</strong> For women, regular gynecological check-ups can help monitor menstrual and reproductive health. <a href="https://www.womenshealth.gov/" target="_blank">Learn more</a>.</li>
+            </ul>
+        """,
+        "dialog_close": "Close",
+        "about_us_label": "About Us",
+        "about_us_content": "HealthBuddy is dedicated to providing personalized health advice to help you live a healthier life.",
+        "disclaimer_label": "Disclaimer",
+        "disclaimer_content": "This application does not replace professional medical advice. Always consult a healthcare provider for medical concerns.",
+        "copyright": "© 2025 HealthToTech. All rights reserved.",
+        "error_weight": "Please enter a valid positive weight.",
+        "error_height": "Please enter a valid positive height.",
+        "error_age": "Please enter a valid positive age.",
+        "error_sleep_hours": "Please enter valid sleep hours (0-24).",
+        "error_gender": "Please select a valid gender.",
+        "error_activity": "Please select a valid activity level.",
+        "error_invalid_input": "Please select a valid option for {field}.",
+        "bmi_underweight": "Your BMI suggests you may be underweight. Consider consulting a nutritionist to ensure adequate nutrient intake.",
+        "bmi_healthy": "Your BMI is in the healthy range. Maintain a balanced diet and regular exercise to stay on track.",
+        "bmi_overweight": "Your BMI indicates you may be overweight. Increase physical activity and consider a balanced diet plan.",
+        "bmi_obese": "Your BMI suggests obesity. Consult a healthcare professional for personalized advice and support.",
+        "activity_low": "Aim for at least 150 minutes of moderate exercise per week to improve overall health.",
+        "activity_moderate": "Great job staying moderately active! Incorporate strength training 2-3 times per week for added benefits.",
+        "activity_high": "You're highly active! Ensure proper recovery with adequate sleep and hydration to support your routine.",
+        "sleep_poor": "Poor sleep quality can affect your health. Aim for 7-9 hours of consistent sleep and consider a sleep specialist if disturbances persist.",
+        "sleep_good": "Good sleep habits support overall health. Maintain consistent sleep schedules for optimal well-being.",
+        "chronic_disease_yes": "Managing chronic conditions requires regular check-ups and adherence to medical advice.",
+        "chronic_disease_no": "No chronic conditions reported. Continue regular health check-ups to maintain your well-being.",
+        "substance_use_yes": "Substance use can impact your health. Consider consulting a professional for support and guidance.",
+        "substance_use_no": "Avoiding substance use is beneficial for long-term health. Keep up the healthy choices!",
+        "menstrual_irregular": "Irregular menstrual cycles may require medical evaluation. Consult a gynecologist for further assessment.",
+        "menstrual_regular": "Regular menstrual cycles are a good sign of hormonal health. Continue monitoring any changes.",
+        "pregnancy_history": "Previous pregnancies may influence health needs. Discuss with your doctor for tailored advice.",
+        "contraceptive_use": "Contraceptive use should be discussed with a healthcare provider to ensure it meets your health needs.",
+        "general_nutrition": "Incorporate nutrient-dense foods like leafy greens, nuts, and lean proteins to support overall health.",
+        "mental_health": "Practice stress-reduction techniques like meditation or yoga to enhance mental well-being.",
+        "hydration": "Staying hydrated is key to energy levels and organ function. Carry a water bottle to track intake."
+    },
+    "sw": {
+        "title": "HealthBuddy - Rafiki Yako wa Afya",
+        "intro": "Rafiki yako wa kibinafsi wa afya – ingiza maelezo yako kwa ushauri wa afya wa kibinafsi!",
+        "learn_health": "Jifunze Kuhusu Maisha ya Afya",
+        "weight_label": "Uzito (kg):",
+        "height_label": "Urefu (cm):",
+        "age_label": "Umri:",
+        "gender_label": "Jinsia:",
+        "activity_label": "Kiwango cha Shughuli:",
+        "chronic_diseases_label": "Magonjwa ya Muda Mrefu:",
+        "sleep_hours_label": "Saa za Kulala kwa Usiku:",
+        "sleep_consistency_label": "Wakati wa Kulala wa Mara kwa Mara?:",
+        "sleep_disturbances_label": "Usumbufu wa Usingizi:",
+        "substance_use_label": "Matumizi ya Dawa (k.m., pombe, tumbaku):",
+        "menstrual_regularity_label": "Uratibu wa Mizunguko ya Hedhi:",
+        "pregnancy_history_label": "Historia ya Ujauzito:",
+        "contraceptive_use_label": "Matumizi ya Uzazi wa Mpango:",
+        "submit": "Pata Ushauri Wako wa Afya",
+        "select_gender": "Chagua jinsia",
+        "select_activity": "Chagua kiwango cha shughuli",
+        "male": "Mwanaume",
+        "female": "Mwanamke",
+        "low": "Chini (kukaa tu)",
+        "moderate": "Wastani (mazoezi mepesi)",
+        "high": "Juu (shughuli za mara kwa mara)",
+        "yes": "Ndiyo",
+        "no": "Hapana",
+        "regular": "Mara kwa mara",
+        "irregular": "Sio ya mara kwa mara",
+        "none": "Hakuna",
+        "insomnia": "Kukosa usingizi",
+        "waking_tired": "Kuamka ukiwa umechoka",
+        "has_pregnancy": "Ndiyo, mimba za awali",
+        "no_pregnancy": "Hapana mimba",
+        "contraceptive_none": "Hakuna",
+        "contraceptive_pill": "Vidonge",
+        "contraceptive_iud": "IUD",
+        "report_title": "Ripoti Yako ya Afya ya Kibinafsi",
+        "water_intake_title": "Ulaji wa Maji wa Kila Siku Unaopendekezwa",
+        "health_tips_title": "Vidokezo vya Afya vya Kibinafsi",
+        "bmi_label": "BMI:",
+        "dialog_title": "Vidokezo vya Maisha ya Afya",
+        "dialog_content": """
+            Kuchukua mtindo wa maisha ya afya kunaweza kuboresha ustawi wako kwa kiasi kikubwa. Hapa kuna vidokezo vya msingi:
+            <ul>
+                <li><strong>Kaa na Maji:</strong> Kunywa maji ya kutosha kila siku kulingana na uzito wako na kiwango cha shughuli. <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Chakula Bora:</strong> Jumuisha vyakula vyenye virutubisho kama matunda, mboga, nafaka za jumla, na protini zisizo na mafuta. <a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Mazoezi ya Mara kwa Mara:</strong> Lenga angalau dakika 150 za shughuli za wastani kwa wiki ili kuimarisha afya ya mwili. <a href="https://www.cdc.gov/physical-activity-basics/index.html" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Usingizi wa Kutosha:</strong> Weka kipaumbele kwa saa 7-9 za usingizi bora kila usiku kwa ajili ya kupona na uwazi wa akili. <a href="https://www.sleepfoundation.org/how-sleep-works" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Afya ya Akili:</strong> Fanya mazoezi ya kuzingatia, kutafakari, au mambo ya kupendeza ili kudhibiti msongo wa mawazo kwa ufanisi. <a href="https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/mindfulness" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Kudhibiti Magonjwa ya Muda Mrefu:</strong> Uchunguzi wa mara kwa mara na kufuata ushauri wa matibabu ni muhimu kwa kudhibiti hali kama kisukari au shinikizo la damu. <a href="https://www.cdc.gov/chronic-disease/index.html" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Kuepuka Dawa:</strong> Punguza au epuka pombe na tumbaku ili kupunguza hatari za afya. <a href="https://www.who.int/news-room/fact-sheets/detail/tobacco" target="_blank">Jifunze zaidi</a>.</li>
+                <li><strong>Afya ya Uzazi:</strong> Kwa wanawake, uchunguzi wa mara kwa mara wa magonjwa ya wanawake unaweza kusaidia kufuatilia afya ya hedhi na uzazi. <a href="https://www.womenshealth.gov/" target="_blank">Jifunze zaidi</a>.</li>
+            </ul>
+        """,
+        "dialog_close": "Funga",
+        "about_us_label": "Kuhusu Sisi",
+        "about_us_content": "HealthBuddy imejitolea kutoa ushauri wa afya wa kibinafsi ili kukusaidia kuishi maisha ya afya.",
+        "disclaimer_label": "Kanusho",
+        "disclaimer_content": "Programu hii haiwezi kuchukua nafasi ya ushauri wa kitaalamu wa matibabu. Daima wasiliana na mtoa huduma za afya kwa masuala ya matibabu.",
+        "copyright": "© 2025 HealthToTech. Haki zote zimehifadhiwa.",
+        "error_weight": "Tafadhali ingiza uzito halali wa chanya.",
+        "error_height": "Tafadhali ingiza urefu halali wa chanya.",
+        "error_age": "Tafadhali ingiza umri halali wa chanya.",
+        "error_sleep_hours": "Tafadhali ingiza saa za kulala zinazofaa (0-24).",
+        "error_gender": "Tafadhali chagua jinsia halali.",
+        "error_activity": "Tafadhali chagua kiwango cha shughuli halali.",
+        "error_invalid_input": "Tafadhali chagua chaguo halali kwa {field}.",
+        "bmi_underweight": "BMI yako inaonyesha unaweza kuwa na uzito wa chini. Fikiria kushauriana na mtaalamu wa lishe.",
+        "bmi_healthy": "BMI yako iko katika kiwango cha afya. Endelea kudumisha chakula bora na mazoezi ya mara kwa mara.",
+        "bmi_overweight": "BMI yako inaonyesha unaweza kuwa na uzito wa ziada. Ongeza shughuli za kimwili na fuata chakula bora.",
+        "bmi_obese": "BMI yako inaonyesha unene. Shauriana na mtaalamu wa afya kwa ushauri wa kibinafsi.",
+        "activity_low": "Lenga angalau dakika 150 za mazoezi ya wastani kwa wiki ili kuboresha afya ya jumla.",
+        "activity_moderate": "Kazi nzuri kwa kuendelea na shughuli za wastani! Jumuisha mafunzo ya nguvu mara 2-3 kwa wiki.",
+        "activity_high": "Wewe ni mwenye shughuli za juu! Hakikisha unapata nafuu ya kutosha na usingizi wa kutosha na maji.",
+        "sleep_poor": "Ubora duni wa usingizi unaweza kuathiri afya yako. Lenga kulala saa 7-9 za mara kwa mara na fikiria mtaalamu wa usingizi ikiwa usumbufu utaendelea.",
+        "sleep_good": "Tabia nzuri za kulala zinasaidia afya ya jumla. Dumisha ratiba za kulala za mara kwa mara kwa ustawi bora.",
+        "chronic_disease_yes": "Kudhibiti hali za muda mrefu kunahitaji uchunguzi wa mara kwa mara na kufuata ushauri wa matibabu.",
+        "chronic_disease_no": "Hakuna hali za muda mrefu zilizoripotiwa. Endelea na uchunguzi wa afya wa mara kwa mara ili kudumisha ustawi wako.",
+        "substance_use_yes": "Matumizi ya dawa za kulevya yanaweza kuathiri afya yako. Fikiria kushauriana na mtaalamu kwa msaada na mwongozo.",
+        "substance_use_no": "Kuepuka matumizi ya dawa za kulevya ni faida kwa afya ya muda mrefu. Endelea na chaguo za afya!",
+        "menstrual_irregular": "Mizunguko ya hedhi isiyo ya kawaida inaweza kuhitaji tathmini ya matibabu. Shauriana na daktari wa wanawake kwa tathmini zaidi.",
+        "menstrual_regular": "Mizunguko ya hedhi ya kawaida ni ishara nzuri ya afya ya homoni. Endelea kufuatilia mabadiliko yoyote.",
+        "pregnancy_history": "Historia ya ujauzito inaweza kuathiri mahitaji ya afya. Jadiliana na daktari wako kwa ushauri wa kibinafsi.",
+        "contraceptive_use": "Matumizi ya uzazi wa mpango yanapaswa kujadiliwa na mtoa huduma za afya ili kuhakikisha yanakidhi mahitaji yako ya afya.",
+        "general_nutrition": "Jumuisha vyakula vyenye virutubisho vingi kama mboga za majani, karanga, na protini zisizo na mafuta ili kusaidia afya ya jumla.",
+        "mental_health": "Fanya mazoezi ya kupunguza msongo wa mawazo kama kutafakari au yoga ili kuboresha ustawi wa akili.",
+        "hydration": "Kukaa na maji ni muhimu kwa viwango vya nishati na utendaji wa viungo. Beba chupa ya maji ili kufuatilia ulaji."
+    }
+}
 
 def init_db():
     """Initialize the SQLite database with required tables."""
@@ -39,6 +217,14 @@ def init_db():
                     activity_level TEXT NOT NULL,
                     water_intake REAL NOT NULL,
                     health_tips TEXT,
+                    chronic_diseases TEXT NOT NULL,
+                    sleep_hours REAL NOT NULL,
+                    sleep_consistency TEXT NOT NULL,
+                    sleep_disturbances TEXT NOT NULL,
+                    substance_use TEXT NOT NULL,
+                    menstrual_regularity TEXT,
+                    pregnancy_history TEXT,
+                    contraceptive_use TEXT,
                     timestamp TEXT NOT NULL
                 )
             ''')
@@ -49,16 +235,15 @@ def init_db():
                     password_hash TEXT NOT NULL
                 )
             ''')
-            # Create default admin if not exists
             c.execute("SELECT * FROM users WHERE username = 'admin'")
             if not c.fetchone():
                 c.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                          ('admin', generate_password_hash('admin123')))
+                         ('admin', generate_password_hash('admin123')))
             conn.commit()
             logger.info("Database initialized successfully")
     except sqlite3.Error as e:
         logger.error(f"Database initialization error: {e}")
-
+        raise
 
 def calculate_water_intake(weight, activity_level):
     """Calculate recommended daily water intake based on weight and activity level."""
@@ -67,39 +252,13 @@ def calculate_water_intake(weight, activity_level):
     water_ml = weight * (base_ml_per_kg + activity_multipliers.get(activity_level, 0))
     return round(water_ml / 1000, 2)
 
-
 def calculate_bmi(weight, height):
     """Calculate BMI based on weight and height."""
     return round(weight / ((height / 100) ** 2), 2)
 
-
-def generate_health_tips(age, gender, weight, height, activity_level, lang="en"):
+def generate_health_tips(age, gender, weight, height, activity_level, chronic_diseases, sleep_hours, sleep_consistency, sleep_disturbances, substance_use, menstrual_regularity, pregnancy_history, contraceptive_use, lang="en"):
     """Generate personalized health tips based on user input."""
     bmi = calculate_bmi(weight, height)
-    translations = {
-        "en": {
-            "bmi_underweight": "Your BMI suggests you may be underweight. Consider consulting a nutritionist.",
-            "bmi_healthy": "Your BMI is in the healthy range. Maintain a balanced diet and regular exercise.",
-            "bmi_overweight": "Your BMI indicates you may be overweight. Increase physical activity and follow a balanced diet.",
-            "bmi_obese": "Your BMI suggests obesity. Consult a healthcare professional for personalized advice.",
-            "activity_low": "Aim for at least 150 minutes of moderate exercise per week.",
-            "activity_moderate": "Great job staying moderately active! Add strength training 2-3 times per week.",
-            "activity_high": "You're highly active! Ensure proper recovery with adequate sleep and hydration.",
-            "sleep": "Aim for 7-9 hours of sleep per night to support overall health.",
-            "diet": "Include a variety of fruits, vegetables, lean proteins, and whole grains in your diet."
-        },
-        "sw": {
-            "bmi_underweight": "BMI yako inaonyesha unaweza kuwa na uzito wa chini. Fikiria kushauriana na mtaalamu wa lishe.",
-            "bmi_healthy": "BMI yako iko katika kiwango cha afya. Endelea kudumisha chakula bora na mazoezi ya mara kwa mara.",
-            "bmi_overweight": "BMI yako inaonyesha unaweza kuwa na uzito wa ziada. Ongeza shughuli za kimwili na fuata chakula bora.",
-            "bmi_obese": "BMI yako inaonyesha unene. Shauriana na mtaalamu wa afya kwa ushauri wa kibinafsi.",
-            "activity_low": "Lenga angalau dakika 150 za mazoezi ya wastani kwa wiki.",
-            "activity_moderate": "Kazi nzuri kwa kuendelea na shughuli za wastani! Ongeza mafunzo ya nguvu mara 2-3 kwa wiki.",
-            "activity_high": "Wewe ni mwenye shughuli za juu! Hakikisha unapata nafuu ya kutosha na usingizi wa kutosha na maji.",
-            "sleep": "Lenga kulala saa 7-9 kila usiku ili kusaidia afya ya jumla.",
-            "diet": "Jumuisha aina mbalimbali za matunda, mboga, protini zisizo na mafuta, na nafaka za jumla katika chakula chako."
-        }
-    }
     t = translations.get(lang, translations["en"])
     tips = []
     if bmi < 18.5:
@@ -111,201 +270,120 @@ def generate_health_tips(age, gender, weight, height, activity_level, lang="en")
     else:
         tips.append(t["bmi_obese"])
     tips.append(t[f"activity_{activity_level}"])
-    tips.extend([t["sleep"], t["diet"]])
+    if sleep_hours < 7 or sleep_consistency == 'no' or sleep_disturbances != 'none':
+        tips.append(t["sleep_poor"])
+    else:
+        tips.append(t["sleep_good"])
+    tips.append(t[f"chronic_disease_{chronic_diseases.lower()}"])
+    tips.append(t[f"substance_use_{substance_use.lower()}"])
+    if gender == 'female' and menstrual_regularity:
+        tips.append(t[f"menstrual_{menstrual_regularity.lower()}"])
+    if gender == 'female' and pregnancy_history == 'has_pregnancy':
+        tips.append(t["pregnancy_history"])
+    if gender == 'female' and contraceptive_use != 'none':
+        tips.append(t["contraceptive_use"])
+    tips.extend([t["general_nutrition"], t["mental_health"], t["hydration"]])
     return tips
-
-
-def send_health_report(email, result, lang="en"):
-    """Send personalized health report via email."""
-    translations = {
-        "en": {
-            "subject": "Your HealthBuddy Report",
-            "greeting": "Hello, here is your personalized health report from HealthBuddy:",
-            "weight": "Weight",
-            "height": "Height",
-            "age": "Age",
-            "gender": "Gender",
-            "activity_level": "Activity Level",
-            "water_intake": "Recommended Daily Water Intake",
-            "health_tips": "Personalized Health Tips",
-            "disclaimer": "Disclaimer: This report is for informational purposes only and does not replace professional medical advice."
-        },
-        "sw": {
-            "subject": "Ripoti Yako ya HealthBuddy",
-            "greeting": "Habari, hii ni ripoti yako ya kibinafsi ya afya kutoka HealthBuddy:",
-            "weight": "Uzito",
-            "height": "Urefu",
-            "age": "Umri",
-            "gender": "Jinsia",
-            "activity_level": "Kiwango cha Shughuli",
-            "water_intake": "Ulaji wa Maji wa Kila Siku Unaopendekezwa",
-            "health_tips": "Vidokezo vya Afya vya Kibinafsi",
-            "disclaimer": "Kanusho: Ripoti hii ni kwa madhumuni ya taarifa tu na haiwezi kuchukua nafasi ya ushauri wa kitaalamu wa matibabu."
-        }
-    }
-    t = translations.get(lang, translations["en"])
-    msg = MIMEMultipart()
-    msg['From'] = os.environ.get('EMAIL_SENDER', 'your_email@example.com')
-    msg['To'] = email
-    msg['Subject'] = t["subject"]
-    health_tips_formatted = '\n- '.join(result['health_tips'])
-    body = f"""
-{t["greeting"]}
-
-{t["weight"]}: {result['weight']} kg
-{t["height"]}: {result['height']} cm
-{t["age"]}: {result['age']}
-{t["gender"]}: {result['gender'].capitalize()}
-{t["activity_level"]}: {result['activity_level'].capitalize()}
-{t["water_intake"]}: {result['water_intake']} liters
-{t["health_tips"]}:
-- {health_tips_formatted}
-
-{t["disclaimer"]}
-"""
-    msg.attach(MIMEText(body, 'plain'))
-    try:
-        with smtplib.SMTP(os.environ.get('SMTP_SERVER', 'smtp.gmail.com'), 587) as server:
-            server.starttls()
-            server.login(os.environ.get('EMAIL_SENDER'), os.environ.get('EMAIL_PASSWORD'))
-            server.send_message(msg)
-            logger.info(f"Health report sent to {email}")
-    except Exception as e:
-        logger.error(f"Failed to send email to {email}: {e}")
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     """Handle main page with health form and results."""
     lang = request.args.get('lang', 'en')
-    init_db()
-    translations = {
-        "en": {
-            "title": "HealthBuddy - Your Wellness Companion",
-            "intro": "Your personal wellness companion – enter your details for tailored health advice!",
-            "learn_health": "Learn About Healthy Living",
-            "weight_label": "Weight (kg):",
-            "height_label": "Height (cm):",
-            "age_label": "Age:",
-            "gender_label": "Gender:",
-            "activity_label": "Activity Level:",
-            "email_label": "Email (optional, for report):",
-            "submit": "Get Your Health Advice",
-            "select_gender": "Select gender",
-            "select_activity": "Select activity level",
-            "male": "Male",
-            "female": "Female",
-            "other": "Other",
-            "low": "Low (sedentary)",
-            "moderate": "Moderate (light exercise)",
-            "high": "High (active, regular exercise)",
-            "report_title": "Your Personalized Health Report",
-            "water_intake_title": "Recommended Daily Water Intake",
-            "health_tips_title": "Personalized Health Tips",
-            "bmi_label": "BMI:",
-            "dialog_title": "Healthy Living Tips",
-            "dialog_content": """
-                Adopting a healthy lifestyle can significantly improve your well-being. Here are some key tips:
-                <ul>
-                    <li><strong>Stay Hydrated:</strong> Drink adequate water daily, tailored to your weight and activity level. <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank">Learn more</a>.</li>
-                    <li><strong>Balanced Diet:</strong> Include a variety of nutrient-rich foods like fruits, vegetables, and lean proteins. <a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" target="_blank">Learn more</a>.</li>
-                    <li><strong>Regular Exercise:</strong> Aim for at least 150 minutes of moderate activity per week. <a href="https://www.cdc.gov/physical-activity-basics/index.html" target="_blank">Learn more</a>.</li>
-                    <li><strong>Adequate Sleep:</strong> Prioritize 7-9 hours of quality sleep each night. <a href="https://www.sleepfoundation.org/how-sleep-works" target="_blank">Learn more</a>.</li>
-                    <li><strong>Mental Health:</strong> Practice stress management through mindfulness or hobbies. <a href="https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/mindfulness" target="_blank">Learn more</a>.</li>
-                </ul>
-            """,
-            "dialog_close": "Close",
-            "about_us_label": "About Us",
-            "about_us_content": "HealthBuddy is dedicated to providing personalized health advice to help you live a healthier life.",
-            "disclaimer_label": "Disclaimer",
-            "disclaimer_content": "This application does not replace professional medical advice. Always consult a healthcare provider for medical concerns.",
-            "copyright": "© 2025 HealthToTech. All rights reserved.",
-            "error_weight": "Please enter a valid positive weight.",
-            "error_height": "Please enter a valid positive height.",
-            "error_age": "Please enter a valid positive age.",
-            "error_email": "Please enter a valid email address."
-        },
-        "sw": {
-            "title": "HealthBuddy - Rafiki Yako wa Afya",
-            "intro": "Rafiki yako wa kibinafsi wa afya – ingiza maelezo yako kwa ushauri wa afya wa kibinafsi!",
-            "learn_health": "Jifunze Kuhusu Maisha ya Afya",
-            "weight_label": "Uzito (kg):",
-            "height_label": "Urefu (cm):",
-            "age_label": "Umri:",
-            "gender_label": "Jinsia:",
-            "activity_label": "Kiwango cha Shughuli:",
-            "email_label": "Barua Pepe (hiari, kwa ripoti):",
-            "submit": "Pata Ushauri Wako wa Afya",
-            "select_gender": "Chagua jinsia",
-            "select_activity": "Chagua kiwango cha shughuli",
-            "male": "Mwanaume",
-            "female": "Mwanamke",
-            "other": "Nyingine",
-            "low": "Chini (kukaa tu)",
-            "moderate": "Wastani (mazoezi mepesi)",
-            "high": "Juu (shughuli za mara kwa mara)",
-            "report_title": "Ripoti Yako ya Afya ya Kibinafsi",
-            "water_intake_title": "Ulaji wa Maji wa Kila Siku Unaopendekezwa",
-            "health_tips_title": "Vidokezo vya Afya vya Kibinafsi",
-            "bmi_label": "BMI:",
-            "dialog_title": "Vidokezo vya Maisha ya Afya",
-            "dialog_content": """
-                Kuchukua mtindo wa maisha ya afya kunaweza kuboresha ustawi wako kwa kiasi kikubwa. Hapa kuna vidokezo vya msingi:
-                <ul>
-                    <li><strong>Kaa na Maji:</strong> Kunywa maji ya kutosha kila siku, kulingana na uzito wako na kiwango cha shughuli. <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank">Jifunze zaidi</a>.</li>
-                    <li><strong>Chakula Bora:</strong> Jumuisha aina mbalimbali za vyakula vyenye virutubisho kama matunda, mboga, na protini zisizo na mafuta. <a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" target="_blank">Jifunze zaidi</a>.</li>
-                    <li><strong>Mazoezi ya Mara kwa Mara:</strong> Lenga angalau dakika 150 za shughuli za wastani kwa wiki. <a href="https://www.cdc.gov/physical-activity-basics/index.html" target="_blank">Jifunze zaidi</a>.</li>
-                    <li><strong>Usingizi wa Kutosha:</strong> Weka kipaumbele kwa saa 7-9 za usingizi bora kila usiku. <a href="https://www.sleepfoundation.org/how-sleep-works" target="_blank">Jifunze zaidi</a>.</li>
-                    <li><strong>Afya ya Akili:</strong> Fanya mazoezi ya kudhibiti msongo wa mawazo kupitia kuzingatia au mambo ya kupendeza. <a href="https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/mindfulness" target="_blank">Jifunze zaidi</a>.</li>
-                </ul>
-            """,
-            "dialog_close": "Funga",
-            "about_us_label": "Kuhusu Sisi",
-            "about_us_content": "HealthBuddy imejitolea kutoa ushauri wa afya wa kibinafsi ili kukusaidia kuishi maisha ya afya.",
-            "disclaimer_label": "Kanusho",
-            "disclaimer_content": "Programu hii haiwezi kuchukua nafasi ya ushauri wa kitaalamu wa matibabu. Daima wasiliana na mtoa huduma za afya kwa masuala ya matibabu.",
-            "copyright": "© 2025 HealthToTech. Haki zote zimehifadhiwa.",
-            "error_weight": "Tafadhali ingiza uzito halali wa chanya.",
-            "error_height": "Tafadhali ingiza urefu halali wa chanya.",
-            "error_age": "Tafadhali ingiza umri halali wa chanya.",
-            "error_email": "Tafadhali ingiza anwani halali ya barua pepe."
-        }
-    }
+    if lang not in ['en', 'sw']:
+        lang = 'en'  # Default to English if invalid language
+    try:
+        init_db()
+    except sqlite3.Error as e:
+        logger.error(f"Database initialization failed: {e}")
+        flash("Database error. Please try again later.", "error")
+        return render_template_string(index_template, t=translations["en"], lang='en')
+
     t = translations.get(lang, translations["en"])
 
     if request.method == "POST":
         try:
-            weight = float(request.form.get("weight"))
-            height = float(request.form.get("height"))
-            age = int(request.form.get("age"))
+            weight = request.form.get("weight")
+            height = request.form.get("height")
+            age = request.form.get("age")
             gender = request.form.get("gender")
             activity_level = request.form.get("activity_level")
-            email = request.form.get("email", "").strip()
+            chronic_diseases = request.form.get("chronic_diseases", "no")
+            sleep_hours = request.form.get("sleep_hours", "0")
+            sleep_consistency = request.form.get("sleep_consistency", "no")
+            sleep_disturbances = request.form.get("sleep_disturbances", "none")
+            substance_use = request.form.get("substance_use", "no")
+            menstrual_regularity = request.form.get("menstrual_regularity", None) if gender == "female" else None
+            pregnancy_history = request.form.get("pregnancy_history", None) if gender == "female" else None
+            contraceptive_use = request.form.get("contraceptive_use", None) if gender == "female" else None
 
-            # Input validation
-            if weight <= 0 or height <= 0 or age <= 0:
-                flash(t["error_weight"] if weight <= 0 else t["error_height"] if height <= 0 else t["error_age"],
-                      "error")
+            # Convert and validate numeric inputs
+            try:
+                weight = float(weight)
+                height = float(height)
+                age = int(age)
+                sleep_hours = float(sleep_hours)
+            except (ValueError, TypeError):
+                flash("Please enter valid numeric values for weight, height, age, and sleep hours.", "error")
                 return render_template_string(index_template, t=t, lang=lang)
-            if gender not in ['male', 'female', 'other'] or activity_level not in ['low', 'moderate', 'high']:
-                flash("Invalid gender or activity level.", "error")
+
+            # Server-side validation
+            if weight <= 0:
+                flash(t["error_weight"], "error")
                 return render_template_string(index_template, t=t, lang=lang)
-            if email and not email.endswith(('.com', '.org', '.net', '.edu')):
-                flash(t["error_email"], "error")
+            if height <= 0:
+                flash(t["error_height"], "error")
                 return render_template_string(index_template, t=t, lang=lang)
+            if age <= 0:
+                flash(t["error_age"], "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if gender not in ['male', 'female']:
+                flash(t["error_gender"], "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if activity_level not in ['low', 'moderate', 'high']:
+                flash(t["error_activity"], "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if sleep_hours < 0 or sleep_hours > 24:
+                flash(t["error_sleep_hours"], "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if chronic_diseases not in ['yes', 'no']:
+                flash(t["error_invalid_input"].format(field="Chronic Diseases"), "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if sleep_consistency not in ['yes', 'no']:
+                flash(t["error_invalid_input"].format(field="Sleep Consistency"), "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if sleep_disturbances not in ['none', 'insomnia', 'waking_tired']:
+                flash(t["error_invalid_input"].format(field="Sleep Disturbances"), "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if substance_use not in ['yes', 'no']:
+                flash(t["error_invalid_input"].format(field="Substance Use"), "error")
+                return render_template_string(index_template, t=t, lang=lang)
+            if gender == 'female':
+                if menstrual_regularity and menstrual_regularity not in ['regular', 'irregular']:
+                    flash(t["error_invalid_input"].format(field="Menstrual Regularity"), "error")
+                    return render_template_string(index_template, t=t, lang=lang)
+                if pregnancy_history and pregnancy_history not in ['has_pregnancy', 'no_pregnancy']:
+                    flash(t["error_invalid_input"].format(field="Pregnancy History"), "error")
+                    return render_template_string(index_template, t=t, lang=lang)
+                if contraceptive_use and contraceptive_use not in ['none', 'pill', 'iud']:
+                    flash(t["error_invalid_input"].format(field="Contraceptive Use"), "error")
+                    return render_template_string(index_template, t=t, lang=lang)
 
             water_intake = calculate_water_intake(weight, activity_level)
-            health_tips = generate_health_tips(age, gender, weight, height, activity_level, lang)
+            health_tips = generate_health_tips(age, gender, weight, height, activity_level, chronic_diseases, sleep_hours, sleep_consistency, sleep_disturbances, substance_use, menstrual_regularity, pregnancy_history, contraceptive_use, lang)
 
-            with sqlite3.connect(DATABASE) as conn:
-                c = conn.cursor()
-                c.execute('''
-                    INSERT INTO health_records (weight, height, age, gender, activity_level, water_intake, health_tips, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (weight, height, age, gender, activity_level, water_intake, ';'.join(health_tips),
-                      datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                conn.commit()
-                logger.info("Health record saved successfully")
+            try:
+                with sqlite3.connect(DATABASE) as conn:
+                    c = conn.cursor()
+                    c.execute('''
+                        INSERT INTO health_records (weight, height, age, gender, activity_level, water_intake, health_tips, chronic_diseases, sleep_hours, sleep_consistency, sleep_disturbances, substance_use, menstrual_regularity, pregnancy_history, contraceptive_use, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (weight, height, age, gender, activity_level, water_intake, ';'.join(health_tips), chronic_diseases, sleep_hours, sleep_consistency, sleep_disturbances, substance_use, menstrual_regularity, pregnancy_history, contraceptive_use, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                    conn.commit()
+                    logger.info("Health record saved successfully")
+            except sqlite3.Error as e:
+                logger.error(f"Database error during record insertion: {e}. Data: weight={weight}, height={height}, age={age}, gender={gender}, activity_level={activity_level}, chronic_diseases={chronic_diseases}, sleep_hours={sleep_hours}, sleep_consistency={sleep_consistency}, sleep_disturbances={sleep_disturbances}, substance_use={substance_use}, menstrual_regularity={menstrual_regularity}, pregnancy_history={pregnancy_history}, contraceptive_use={contraceptive_use}")
+                flash("Failed to save health record due to a database issue. Please try again.", "error")
+                return render_template_string(index_template, t=t, lang=lang)
 
             result = {
                 "weight": weight,
@@ -315,22 +393,24 @@ def index():
                 "activity_level": activity_level,
                 "water_intake": water_intake,
                 "health_tips": health_tips,
-                "bmi": calculate_bmi(weight, height)
+                "bmi": calculate_bmi(weight, height),
+                "chronic_diseases": chronic_diseases,
+                "sleep_hours": sleep_hours,
+                "sleep_consistency": sleep_consistency,
+                "sleep_disturbances": sleep_disturbances,
+                "substance_use": substance_use,
+                "menstrual_regularity": menstrual_regularity,
+                "pregnancy_history": pregnancy_history,
+                "contraceptive_use": contraceptive_use
             }
 
-            if email:
-                send_health_report(email, result, lang)
-                flash("Health report sent to your email!", "success")
-
             return render_template_string(index_template, result=result, t=t, lang=lang)
-        except ValueError:
-            flash("Please enter valid numeric values for weight, height, and age.", "error")
         except Exception as e:
-            logger.error(f"Error processing form: {e}")
-            flash("An error occurred. Please try again.", "error")
+            logger.error(f"Unexpected error processing form: {e}")
+            flash("An unexpected error occurred. Please try again.", "error")
+            return render_template_string(index_template, t=t, lang=lang)
 
     return render_template_string(index_template, t=t, lang=lang)
-
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
@@ -351,10 +431,9 @@ def admin_login():
                 flash("Invalid username or password.", "error")
         except sqlite3.Error as e:
             logger.error(f"Database error during login: {e}")
-            flash("An error occurred. Please try again.", "error")
+            flash("Database error during login. Please try again.", "error")
 
     return render_template_string(admin_login_template)
-
 
 @app.route("/admin/dashboard", methods=["GET", "POST"])
 def admin_dashboard():
@@ -377,10 +456,10 @@ def admin_dashboard():
             if date_filter:
                 query += " AND date(timestamp) = ?"
                 params.append(date_filter)
-            if gender_filter:
+            if gender_filter in ['male', 'female']:
                 query += " AND gender = ?"
                 params.append(gender_filter)
-            if activity_filter:
+            if activity_filter in ['low', 'moderate', 'high']:
                 query += " AND activity_level = ?"
                 params.append(activity_filter)
 
@@ -388,10 +467,11 @@ def admin_dashboard():
             records = [dict(row) for row in c.fetchall()]
 
             c.execute(
-                "SELECT AVG(weight / ((height / 100) * (height / 100))) as avg_bmi, AVG(water_intake) as avg_water FROM health_records")
+                "SELECT AVG(weight / ((height / 100) * (height / 100))) as avg_bmi, AVG(water_intake) as avg_water, AVG(sleep_hours) as avg_sleep FROM health_records")
             stats = c.fetchone()
             avg_bmi = round(stats['avg_bmi'], 2) if stats['avg_bmi'] else 0
             avg_water = round(stats['avg_water'], 2) if stats['avg_water'] else 0
+            avg_sleep = round(stats['avg_sleep'], 2) if stats['avg_sleep'] else 0
 
             c.execute("""
                 SELECT 
@@ -404,12 +484,11 @@ def admin_dashboard():
             bmi_dist = c.fetchone()
 
         return render_template_string(admin_dashboard_template, records=records, bmi_dist=bmi_dist,
-                                      avg_bmi=avg_bmi, avg_water=avg_water)
+                                     avg_bmi=avg_bmi, avg_water=avg_water, avg_sleep=avg_sleep)
     except sqlite3.Error as e:
         logger.error(f"Database error in dashboard: {e}")
-        flash("An error occurred while loading the dashboard.", "error")
+        flash("Database error while loading dashboard. Please try again.", "error")
         return redirect(url_for('admin_login'))
-
 
 @app.route("/admin/logout")
 def admin_logout():
@@ -417,7 +496,6 @@ def admin_logout():
     session.pop('admin', None)
     flash("You have been logged out.", "success")
     return redirect(url_for('admin_login'))
-
 
 @app.route("/admin/export_csv")
 def export_csv():
@@ -437,13 +515,17 @@ def export_csv():
         writer = csv.writer(output)
         writer.writerow(
             ['ID', 'Weight (kg)', 'Height (cm)', 'Age', 'Gender', 'Activity Level', 'Water Intake (L)', 'BMI',
-             'Health Tips', 'Timestamp'])
+             'Chronic Diseases', 'Sleep Hours', 'Sleep Consistency', 'Sleep Disturbances', 'Substance Use',
+             'Menstrual Regularity', 'Pregnancy History', 'Contraceptive Use', 'Health Tips', 'Timestamp'])
         for record in records:
             bmi = calculate_bmi(record['weight'], record['height'])
             writer.writerow([
                 record['id'], record['weight'], record['height'], record['age'],
                 record['gender'], record['activity_level'], record['water_intake'],
-                round(bmi, 2), record['health_tips'], record['timestamp']
+                round(bmi, 2), record['chronic_diseases'], record['sleep_hours'],
+                record['sleep_consistency'], record['sleep_disturbances'], record['substance_use'],
+                record['menstrual_regularity'] or '', record['pregnancy_history'] or '', record['contraceptive_use'] or '',
+                record['health_tips'], record['timestamp']
             ])
 
         output.seek(0)
@@ -453,11 +535,14 @@ def export_csv():
             as_attachment=True,
             download_name='healthbuddy_records.csv'
         )
+    except sqlite3.Error as e:
+        logger.error(f"Database error exporting CSV: {e}")
+        flash("Database error while exporting data. Please try again.", "error")
+        return redirect(url_for('admin_dashboard'))
     except Exception as e:
-        logger.error(f"Error exporting CSV: {e}")
+        logger.error(f"Unexpected error exporting CSV: {e}")
         flash("An error occurred while exporting the data.", "error")
         return redirect(url_for('admin_dashboard'))
-
 
 # Index template
 index_template = """
@@ -531,7 +616,7 @@ index_template = """
             margin-bottom: 8px;
             color: #2e7d32;
         }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #81c784;
@@ -540,7 +625,7 @@ index_template = """
             background-color: #f1f8e9;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #2e7d32;
             box-shadow: 0 0 8px rgba(46, 125, 50, 0.3);
@@ -694,6 +779,9 @@ index_template = """
         .health-tips-btn:hover {
             background: #0277bd;
         }
+        #female-fields {
+            display: none;
+        }
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -718,32 +806,41 @@ index_template = """
             const weight = document.getElementById('weight').value;
             const height = document.getElementById('height').value;
             const age = document.getElementById('age').value;
-            const email = document.getElementById('email').value;
-            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            const sleepHours = document.getElementById('sleep_hours').value;
+            const gender = document.getElementById('gender').value;
+            const activityLevel = document.getElementById('activity_level').value;
             const lang = '{{ lang }}';
             const translations = {
                 'en': {
                     'error_weight': 'Please enter a valid positive weight.',
                     'error_height': 'Please enter a valid positive height.',
                     'error_age': 'Please enter a valid positive age.',
-                    'error_email': 'Please enter a valid email address.'
+                    'error_sleep_hours': 'Please enter valid sleep hours (0-24).',
+                    'error_gender': 'Please select a valid gender.',
+                    'error_activity': 'Please select a valid activity level.'
                 },
                 'sw': {
                     'error_weight': 'Tafadhali ingiza uzito halali wa chanya.',
                     'error_height': 'Tafadhali ingiza urefu halali wa chanya.',
                     'error_age': 'Tafadhali ingiza umri halali wa chanya.',
-                    'error_email': 'Tafadhali ingiza anwani halali ya barua pepe.'
+                    'error_sleep_hours': 'Tafadhali ingiza saa za kulala zinazofaa (0-24).',
+                    'error_gender': 'Tafadhali chagua jinsia halali.',
+                    'error_activity': 'Tafadhali chagua kiwango cha shughuli halali.'
                 }
             };
             let error = '';
-            if (isNaN(weight) || weight <= 0) {
+            if (!weight || isNaN(weight) || weight <= 0) {
                 error = translations[lang]['error_weight'];
-            } else if (isNaN(height) || height <= 0) {
+            } else if (!height || isNaN(height) || height <= 0) {
                 error = translations[lang]['error_height'];
-            } else if (isNaN(age) || age <= 0) {
+            } else if (!age || isNaN(age) || age <= 0) {
                 error = translations[lang]['error_age'];
-            } else if (email && !emailRegex.test(email)) {
-                error = translations[lang]['error_email'];
+            } else if (!gender || !['male', 'female'].includes(gender)) {
+                error = translations[lang]['error_gender'];
+            } else if (!activityLevel || !['low', 'moderate', 'high'].includes(activityLevel)) {
+                error = translations[lang]['error_activity'];
+            } else if (!sleepHours || isNaN(sleepHours) || sleepHours < 0 || sleepHours > 24) {
+                error = translations[lang]['error_sleep_hours'];
             }
             if (error) {
                 document.getElementById('error').innerText = error;
@@ -757,6 +854,11 @@ index_template = """
         }
         function closeDialog() {
             document.getElementById('healthDialog').style.display = 'none';
+        }
+        function toggleFemaleFields() {
+            const gender = document.getElementById('gender').value;
+            const femaleFields = document.getElementById('female-fields');
+            femaleFields.style.display = gender === 'female' ? 'block' : 'none';
         }
     </script>
 </head>
@@ -792,11 +894,10 @@ index_template = """
             </div>
             <div class="form-group">
                 <label for="gender">{{ t['gender_label'] }}</label>
-                <select id="gender" name="gender" required>
+                <select id="gender" name="gender" required onchange="toggleFemaleFields()">
                     <option value="" disabled selected>{{ t['select_gender'] }}</option>
                     <option value="male">{{ t['male'] }}</option>
                     <option value="female">{{ t['female'] }}</option>
-                    <option value="other">{{ t['other'] }}</option>
                 </select>
             </div>
             <div class="form-group">
@@ -809,8 +910,64 @@ index_template = """
                 </select>
             </div>
             <div class="form-group">
-                <label for="email">{{ t['email_label'] }}</label>
-                <input type="email" id="email" name="email" placeholder="e.g., user@example.com">
+                <label for="chronic_diseases">{{ t['chronic_diseases_label'] }}</label>
+                <select id="chronic_diseases" name="chronic_diseases" required>
+                    <option value="no">{{ t['no'] }}</option>
+                    <option value="yes">{{ t['yes'] }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sleep_hours">{{ t['sleep_hours_label'] }}</label>
+                <input type="number" id="sleep_hours" name="sleep_hours" step="0.1" required placeholder="e.g., 7.5">
+            </div>
+            <div class="form-group">
+                <label for="sleep_consistency">{{ t['sleep_consistency_label'] }}</label>
+                <select id="sleep_consistency" name="sleep_consistency" required>
+                    <option value="yes">{{ t['yes'] }}</option>
+                    <option value="no">{{ t['no'] }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sleep_disturbances">{{ t['sleep_disturbances_label'] }}</label>
+                <select id="sleep_disturbances" name="sleep_disturbances" required>
+                    <option value="none">{{ t['none'] }}</option>
+                    <option value="insomnia">{{ t['insomnia'] }}</option>
+                    <option value="waking_tired">{{ t['waking_tired'] }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="substance_use">{{ t['substance_use_label'] }}</label>
+                <select id="substance_use" name="substance_use" required>
+                    <option value="yes">{{ t['yes'] }}</option>
+                    <option value="no">{{ t['no'] }}</option>
+                </select>
+            </div>
+            <div id="female-fields">
+                <div class="form-group">
+                    <label for="menstrual_regularity">{{ t['menstrual_regularity_label'] }}</label>
+                    <select id="menstrual_regularity" name="menstrual_regularity">
+                        <option value="" disabled selected>{{ t['select'] or 'Select' }}</option>
+                        <option value="regular">{{ t['regular'] }}</option>
+                        <option value="irregular">{{ t['irregular'] }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pregnancy_history">{{ t['pregnancy_history_label'] }}</label>
+                    <select id="pregnancy_history" name="pregnancy_history">
+                        <option value="" disabled selected>{{ t['select'] or 'Select' }}</option>
+                        <option value="has_pregnancy">{{ t['has_pregnancy'] }}</option>
+                        <option value="no_pregnancy">{{ t['no_pregnancy'] }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contraceptive_use">{{ t['contraceptive_use_label'] }}</label>
+                    <select id="contraceptive_use" name="contraceptive_use">
+                        <option value="" disabled selected>{{ t['select'] or 'Select' }}</option>
+                        <option value="none">{{ t['contraceptive_none'] }}</option>
+                        <option value="pill">{{ t['contraceptive_pill'] }}</option>
+                        <option value="iud">{{ t['contraceptive_iud'] }}</option>
+                    </select>
+                </div>
             </div>
             <button type="submit">{{ t['submit'] }}</button>
         </form>
@@ -824,6 +981,20 @@ index_template = """
             <p><strong>{{ t['gender_label'][:-1] }}</strong> {{ result.gender | capitalize }}</p>
             <p><strong>{{ t['activity_label'][:-1] }}</strong> {{ result.activity_level | capitalize }}</p>
             <p><strong>{{ t['bmi_label'] }}</strong> {{ result.bmi }}</p>
+            <p><strong>{{ t['chronic_diseases_label'][:-1] }}</strong> {{ result.chronic_diseases | capitalize }}</p>
+            <p><strong>{{ t['sleep_hours_label'][:-1] }}</strong> {{ result.sleep_hours }} hours</p>
+            <p><strong>{{ t['sleep_consistency_label'][:-1] }}</strong> {{ result.sleep_consistency | capitalize }}</p>
+            <p><strong>{{ t['sleep_disturbances_label'][:-1] }}</strong> {{ result.sleep_disturbances | capitalize }}</p>
+            <p><strong>{{ t['substance_use_label'][:-1] }}</strong> {{ result.substance_use | capitalize }}</p>
+            {% if result.gender == 'female' and result.menstrual_regularity %}
+                <p><strong>{{ t['menstrual_regularity_label'][:-1] }}</strong> {{ result.menstrual_regularity | capitalize }}</p>
+            {% endif %}
+            {% if result.gender == 'female' and result.pregnancy_history %}
+                <p><strong>{{ t['pregnancy_history_label'][:-1] }}</strong> {{ result.pregnancy_history | capitalize }}</p>
+            {% endif %}
+            {% if result.gender == 'female' and result.contraceptive_use %}
+                <p><strong>{{ t['contraceptive_use_label'][:-1] }}</strong> {{ result.contraceptive_use | capitalize }}</p>
+            {% endif %}
             <h3>{{ t['water_intake_title'] }}</h3>
             <p>{{ result.water_intake }} liters</p>
             <h3>{{ t['health_tips_title'] }}</h3>
@@ -1086,7 +1257,6 @@ admin_dashboard_template = """
                 <option value="">All</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="other">Other</option>
             </select>
         </div>
         <div>
@@ -1110,6 +1280,14 @@ admin_dashboard_template = """
             <th>Activity Level</th>
             <th>Water Intake (L)</th>
             <th>BMI</th>
+            <th>Chronic Diseases</th>
+            <th>Sleep Hours</th>
+            <th>Sleep Consistency</th>
+            <th>Sleep Disturbances</th>
+            <th>Substance Use</th>
+            <th>Menstrual Regularity</th>
+            <th>Pregnancy History</th>
+            <th>Contraceptive Use</th>
             <th>Timestamp</th>
         </tr>
         {% for record in records %}
@@ -1122,6 +1300,14 @@ admin_dashboard_template = """
                 <td>{{ record['activity_level'] | capitalize }}</td>
                 <td>{{ record['water_intake'] }}</td>
                 <td>{{ "%.2f" | format(record['weight'] / ((record['height'] / 100) * (record['height'] / 100))) }}</td>
+                <td>{{ record['chronic_diseases'] | capitalize }}</td>
+                <td>{{ record['sleep_hours'] }}</td>
+                <td>{{ record['sleep_consistency'] | capitalize }}</td>
+                <td>{{ record['sleep_disturbances'] | capitalize }}</td>
+                <td>{{ record['substance_use'] | capitalize }}</td>
+                <td>{{ record['menstrual_regularity'] | capitalize or '' }}</td>
+                <td>{{ record['pregnancy_history'] | capitalize or '' }}</td>
+                <td>{{ record['contraceptive_use'] | capitalize or '' }}</td>
                 <td>{{ record['timestamp'] }}</td>
             </tr>
         {% endfor %}
@@ -1157,11 +1343,11 @@ admin_dashboard_template = """
         new Chart(statsCtx, {
             type: 'bar',
             data: {
-                labels: ['Average BMI', 'Average Water Intake (L)'],
+                labels: ['Average BMI', 'Average Water Intake (L)', 'Average Sleep Hours'],
                 datasets: [{
                     label: 'Statistics',
-                    data: [{{ avg_bmi }}, {{ avg_water }}],
-                    backgroundColor: ['#36a2eb', '#4bc0c0']
+                    data: [{{ avg_bmi }}, {{ avg_water }}, {{ avg_sleep }}],
+                    backgroundColor: ['#36a2eb', '#4bc0c0', '#ffcd56']
                 }]
             },
             options: {
