@@ -606,7 +606,7 @@ about_template = """
 <body class="min-h-screen bg-gradient-to-br from-cyan-50 to-green-100 flex flex-col">
     <header class="bg-green-800 text-white p-4 sticky top-0 z-10">
         <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthToTech</h1>
+            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthBuddy</h1>
             <select onchange="changeLanguage(this.value)" class="bg-green-700 p-2 rounded text-sm sm:text-base">
                 <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
                 <option value="sw" {% if lang == 'sw' %}selected{% endif %}>Swahili</option>
@@ -686,7 +686,7 @@ assessment_template = """
 <body class="min-h-screen bg-gradient-to-br from-cyan-50 to-green-100 flex flex-col">
     <header class="bg-green-800 text-white p-4 sticky top-0 z-10">
         <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthToTech</h1>
+            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthBuddy</h1>
             <select onchange="changeLanguage(this.value)" class="bg-green-700 p-2 rounded text-sm sm:text-base">
                 <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
                 <option value="sw" {% if lang == 'sw' %}selected{% endif %}>Swahili</option>
