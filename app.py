@@ -371,17 +371,17 @@ def generate_health_tips(age, gender, weight, height, activity_level, chronic_di
 @app.route("/", methods=["GET"])
 def about():
     """Display About Us page."""
-    lang = session.get('lang', request.args.get('lang', 'en'))
-    session['lang'] = lang
-    t = translations.get(lang, translations["en"])
+    lang = request.args.get('lang', session.get('lang', 'en'))  # Get lang from URL or session
+    session['lang'] = lang  # Store lang in session
+    t = translations.get(lang, translations["en"])  # Get translations for selected language
     return render_template_string(about_template, t=t, lang=lang)
 
 @app.route("/assessment", methods=["GET", "POST"])
 def assessment():
     """Handle health assessment."""
-    lang = session.get('lang', request.args.get('lang', 'en'))
-    session['lang'] = lang
-    t = translations.get(lang, translations["en"])
+    lang = request.args.get('lang', session.get('lang', 'en'))  # Get lang from URL or session
+    session['lang'] = lang  # Store lang in session
+    t = translations.get(lang, translations["en"])  # Get translations for selected language
     if request.method == "POST":
         try:
             # Get form data with explicit defaults
@@ -599,7 +599,7 @@ about_template = """
             button.classList.toggle('cursor-not-allowed', !checkbox.checked);
         }
         function changeLanguage(lang) {
-            window.location.href = '?lang=' + lang;
+            window.location.href = '{{ url_for("about") }}?lang=' + lang;
         }
     </script>
 </head>
@@ -678,7 +678,7 @@ assessment_template = """
             document.getElementById('female-fields').classList.toggle('hidden', document.getElementById('gender').value !== 'female');
         }
         function changeLanguage(lang) {
-            window.location.href = '?lang=' + lang;
+            window.location.href = '{{ url_for("assessment") }}?lang=' + lang;
         }
         const translations = {{ t | tojson | safe }};
     </script>
@@ -705,6 +705,7 @@ assessment_template = """
             {% endif %}
         {% endwith %}
         <form method="POST" onsubmit="return validateForm()" class="space-y-6">
+            <input type="hidden" name="lang" value="{{ lang }}">
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-lg sm:text-xl font-semibold text-green-800 mb-4">{{ t['basic_info'] }}</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
