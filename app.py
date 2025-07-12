@@ -127,19 +127,19 @@ translations = {
         "bmi_obese": "High weight: See a doctor, eat more veggies, and reduce oily/sugary foods.",
         "activity_low_youth": "Young? Walk or play sports for 30 min daily to stay active.",
         "activity_low_elderly": "Gentle walking or gardening keeps you strong.",
-        "activity_moderate_youth": "Good activity! Try dancing or football to stay fit.",
-        "activity_moderate_elderly": "Keep moving with light chores or walking.",
+        "activity_moderate_youth": "Good activity! Try more activity  like walking at range for 20 -30 min per day needed to stay fit.",
+        "activity_moderate_elderly": "Keep moving with light chores or walking like walking at range for 20 -30 min per.",
         "activity_high_youth": "Very active! Rest well, drink clean water to maintain energy.",
         "activity_high_elderly": "Great activity! Rest and eat healthy to stay strong.",
         "sleep_poor_youth": "Poor sleep? Aim for 7-9 hours nightly and avoid screens before bed.",
         "sleep_poor_elderly": "Tired from poor sleep? Aim for 7-9 hours and relax before bed.",
         "sleep_good": "Good sleep keeps you strong and happy! Maintain 7-9 hours.",
-        "sleep_disturbance_insomnia": "Insomnia? Try a bedtime routine or consult a doctor.",
+        "sleep_disturbance_insomnia": "Insomnia? Try a bedtime routine or consult a doctor .",
         "sleep_disturbance_waking_tired": "Waking tired? Ensure 7-9 hours and limit caffeine.",
         "sleep_disturbance_no_disturbance": "No sleep issues? Keep your routine for good health!",
         "mental_poor_youth": "Stressed or sad? Talk to a friend or counselor to feel better.",
         "mental_poor_elderly": "Feeling down? Share with family or a doctor for support.",
-        "mental_moderate_youth": "Some stress? Relax with music or a walk to stay calm.",
+        "mental_moderate_youth": "Some stress? Relax talk to someone or go counselling to stay calm.",
         "mental_moderate_elderly": "Feeling okay? Rest with family or light activity for peace.",
         "mental_good": "Feeling great! Keep doing what you love to stay happy.",
         "chronic_disease": "For {} (e.g., diabetes, hypertension), see a doctor regularly.",
@@ -150,7 +150,7 @@ translations = {
         "menstrual_regular": "Regular periods show good health. Keep monitoring.",
         "pregnancy_history": "Past pregnancies? Talk to a doctor for tailored advice.",
         "contraceptive_use": "Using contraceptives? Discuss with a doctor for guidance.",
-        "general_nutrition_youth": "Eat ugali, beans, greens to grow strong and healthy.",
+        "general_nutrition_youth": "Eat health food available at your community, such as beans, greens for healthy.",
         "general_nutrition_elderly": "Choose veggies and fruits to stay healthy and strong."
     },
     "sw": {
@@ -261,19 +261,19 @@ translations = {
         "bmi_obese": "Uzito wa juu: Ongea na daktari, kula mboga zaidi, na punguza vyakula vya mafuta/sukari.",
         "activity_low_youth": "Kijana? Tembea au cheza michezo kwa dakika 30 kila siku ili uwe na shughuli.",
         "activity_low_elderly": "Tembea au lima kwa upole ili uwe na nguvu.",
-        "activity_moderate_youth": "Shughuli nzuri! Jaribu kucheza dansi au mpira ili uwe na afya.",
-        "activity_moderate_elderly": "Endelea na kazi za nyumbani au kutembea.",
+        "activity_moderate_youth": "Shughuli nzuri! Jaribu zaidi mazoezi hta ya kutembea kila siku kwa muda wa dk 25-30 ili uwe na afya.",
+        "activity_moderate_elderly": "Endelea na kazi za nyumbani au kutembea  kila siku kwa muda wa dk 25-30.",
         "activity_high_youth": "Mwenye shughuli! Pumzika vizuri, kunywa maji safi ili kudumisha nguvu.",
         "activity_high_elderly": "Shughuli nzuri! Pumzika na kula vizuri ili uwe na nguvu.",
         "sleep_poor_youth": "Usingizi hafifu? Lenga saa 7-9 usiku na epuka skrini kabla ya kulala.",
-        "sleep_poor_elderly": "Usingizi duni? Jaribu saa 7-9 na pumzika kabla ya kulala.",
-        "sleep_good": "Usingizi mzuri unakufanya uwe na nguvu! Dumisha saa 7-9.",
+        "sleep_poor_elderly": "Usingizi duni? Jaribu saa 7-9 na pumzika kabla ya kulala .",
+        "sleep_good": "Usingizi mzuri unakufanya uwe na nguvu! Dumisha saa 7-9 .",
         "sleep_disturbance_insomnia": "Kukosa usingizi? Jaribu ratiba ya kulala au ongea na daktari.",
         "sleep_disturbance_waking_tired": "Kuamka ukiwa umechoka? Hakikisha saa 7-9 na punguza kafeini.",
         "sleep_disturbance_no_disturbance": "Hakuna usumbufu wa usingizi? Dumisha ratiba yako kwa afya njema!",
         "mental_poor_youth": "Huzuni au msongo? Ongea na rafiki au mshauri ili ujisikie vizuri.",
         "mental_poor_elderly": "Unahisi chini? Ongea na familia au daktari kwa msaada.",
-        "mental_moderate_youth": "Msongo kidogo? Pumzika na muziki au tembea ili uwe na utulivu.",
+        "mental_moderate_youth": "Msongo kidogo? Pumzika na ongea na mtu au mshauri nasaha ili uwe na utulivu.",
         "mental_moderate_elderly": "Sawa? Pumzika na familia au shughuli za upole kwa amani.",
         "mental_good": "Unahisi vizuri! Endelea na mambo unayopenda ili uwe na furaha.",
         "chronic_disease": "Kwa {} (k.m., kisukari, shinikizo la damu), tembelea daktari mara kwa mara.",
@@ -284,7 +284,7 @@ translations = {
         "menstrual_regular": "Hedhi ya kawaida inaonyesha afya njema. Endelea kufuatilia.",
         "pregnancy_history": "Mimba za zamani? Ongea na daktari kwa ushauri wa kibinafsi.",
         "contraceptive_use": "Unatumia uzazi wa mpango? Jadiliana na daktari kwa mwongozo.",
-        "general_nutrition_youth": "Kula ugali, maharagwe, mboga kwa nguvu na afya.",
+        "general_nutrition_youth": "kula vyakula vyenye afya  vinavyopatikana kwenye jamii yako,kama maharagwe, mbogamboga, matunda kwa  afya.",
         "general_nutrition_elderly": "Chagua mboga na matunda kwa afya na nguvu."
     }
 }
@@ -348,7 +348,7 @@ def generate_health_tips(age, gender, weight, height, activity_level, chronic_di
             break
     age_group = "youth" if age <= 35 else "elderly"
     tips.append(t[f"activity_{activity_level}_{age_group}"])
-    tips.append(t[f"sleep_{'poor' if sleep_hours < 7 else 'good'}_{age_group}"])
+    tips.append(t["sleep_good"] if sleep_hours >= 7 else t[f"sleep_poor_{age_group}"])
     tips.append(t[f"sleep_disturbance_{sleep_disturbance}"])
     mental_health_base = mental_health.replace("_mental", "")
     tips.append(t[f"mental_{mental_health_base}_{age_group}"])
@@ -421,9 +421,9 @@ def assessment():
                 "sleep_hours": sleep_hours < 0 or sleep_hours > 24,
                 "sleep_disturbance": sleep_disturbance not in ['insomnia', 'waking_tired', 'no_disturbance'],
                 "mental_health": mental_health not in ['good_mental', 'moderate_mental', 'poor_mental'],
-                "fruit_veggie_intake": fruit_veggie_intake not in ['no', 'daily', 'rarely'],
+                "fruit_veggie_intake": fruit_veggie_intake not in ['fruit_veggie_no', 'fruit_veggie_daily', 'fruit_veggie_rarely'],
                 "water_consumption": water_consumption not in ['water_glass_1', 'water_glass_2_3', 'water_liter_1', 'water_liter_1_plus'],
-                "oily_sugary_food_use": oily_sugary_food_use not in ['no', 'moderate', 'frequent', 'daily'],
+                "oily_sugary_food_use": oily_sugary_food_use not in ['oily_sugary_no', 'oily_sugary_moderate', 'oily_sugary_frequent', 'oily_sugary_daily'],
                 "menstrual_regularity": menstrual_regularity not in ['regular', 'irregular'] and gender == 'female',
                 "pregnancy_history": pregnancy_history not in ['has_pregnancy', 'no_pregnancy'] and gender == 'female'
             }
@@ -508,7 +508,7 @@ def admin_login():
 
 @app.route("/admin/dashboard", methods=["GET", "POST"])
 def admin_dashboard():
-    """Display admin dashboard."""
+    """Display admin dashboard with gender distribution pie chart."""
     if not session.get('admin'):
         flash("Please log in.", "error")
         return redirect(url_for('admin_login'))
@@ -530,10 +530,16 @@ def admin_dashboard():
             records = [dict(row) for row in c.fetchall()]
             c.execute("SELECT AVG(weight / ((height / 100) * (height / 100))) as avg_bmi, AVG(water_intake) as avg_water, AVG(sleep_hours) as avg_sleep FROM health_records")
             stats = c.fetchone()
-            stats = {k: round(v, 2) if v else 0 for k, v in stats.items()}
+            stats_dict = {key: round(stats[key], 2) if stats[key] is not None else 0 for key in stats.keys()}
             c.execute("SELECT COUNT(DISTINCT id) as total_users FROM health_records")
             user_count = c.fetchone()['total_users']
-        return render_template_string(admin_dashboard_template, records=records, stats=stats, user_count=user_count)
+            # Fetch gender distribution for pie chart
+            c.execute("SELECT gender, COUNT(*) as count FROM health_records GROUP BY gender")
+            gender_data = c.fetchall()
+            gender_counts = {'male': 0, 'female': 0}
+            for row in gender_data:
+                gender_counts[row['gender']] = row['count']
+        return render_template_string(admin_dashboard_template, records=records, stats=stats_dict, user_count=user_count, gender_counts=gender_counts)
     except sqlite3.Error as e:
         logger.error(f"Dashboard error: {e}")
         flash("Dashboard error.", "error")
@@ -606,7 +612,7 @@ about_template = """
 <body class="min-h-screen bg-gradient-to-br from-cyan-50 to-green-100 flex flex-col">
     <header class="bg-green-800 text-white p-4 sticky top-0 z-10">
         <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthBuddy</h1>
+            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthToTech</h1>
             <select onchange="changeLanguage(this.value)" class="bg-green-700 p-2 rounded text-sm sm:text-base">
                 <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
                 <option value="sw" {% if lang == 'sw' %}selected{% endif %}>Swahili</option>
@@ -659,9 +665,9 @@ assessment_template = """
                 sleep_hours: { value: document.getElementById('sleep_hours').value, error: 'error_sleep_hours', cond: v => !v || isNaN(v) || v < 0 || v > 24 },
                 sleep_disturbance: { value: document.getElementById('sleep_disturbance').value, error: 'error_sleep_disturbance', cond: v => !['insomnia', 'waking_tired', 'no_disturbance'].includes(v) },
                 mental_health: { value: document.getElementById('mental_health').value, error: 'error_mental_health', cond: v => !['good_mental', 'moderate_mental', 'poor_mental'].includes(v) },
-                fruit_veggie_intake: { value: document.getElementById('fruit_veggie_intake').value, error: 'error_fruit_veggie', cond: v => !['no', 'daily', 'rarely'].includes(v) },
+                fruit_veggie_intake: { value: document.getElementById('fruit_veggie_intake').value, error: 'error_fruit_veggie', cond: v => !['fruit_veggie_no', 'fruit_veggie_daily', 'fruit_veggie_rarely'].includes(v) },
                 water_consumption: { value: document.getElementById('water_consumption').value, error: 'error_water', cond: v => !['water_glass_1', 'water_glass_2_3', 'water_liter_1', 'water_liter_1_plus'].includes(v) },
-                oily_sugary_food_use: { value: document.getElementById('oily_sugary_food_use').value, error: 'error_oily_sugary', cond: v => !['no', 'moderate', 'frequent', 'daily'].includes(v) },
+                oily_sugary_food_use: { value: document.getElementById('oily_sugary_food_use').value, error: 'error_oily_sugary', cond: v => !['oily_sugary_no', 'oily_sugary_moderate', 'oily_sugary_frequent', 'oily_sugary_daily'].includes(v) },
                 menstrual_regularity: { value: document.getElementById('menstrual_regularity').value, error: 'error_menstrual_regularity', cond: v => document.getElementById('gender').value === 'female' && !['regular', 'irregular'].includes(v) },
                 pregnancy_history: { value: document.getElementById('pregnancy_history').value, error: 'error_pregnancy_history', cond: v => document.getElementById('gender').value === 'female' && !['has_pregnancy', 'no_pregnancy'].includes(v) }
             };
@@ -686,7 +692,7 @@ assessment_template = """
 <body class="min-h-screen bg-gradient-to-br from-cyan-50 to-green-100 flex flex-col">
     <header class="bg-green-800 text-white p-4 sticky top-0 z-10">
         <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthBuddy</h1>
+            <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">HealthToTech</h1>
             <select onchange="changeLanguage(this.value)" class="bg-green-700 p-2 rounded text-sm sm:text-base">
                 <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
                 <option value="sw" {% if lang == 'sw' %}selected{% endif %}>Swahili</option>
@@ -729,9 +735,9 @@ assessment_template = """
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-lg sm:text-xl font-semibold text-green-800 mb-4">{{ t['nutrition'] }}</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label class="block text-green-700 font-medium mb-1 text-sm sm:text-base">{{ t['fruit_veggie_label'] }}</label><select id="fruit_veggie_intake" name="fruit_veggie_intake" required class="w-full p-2 border border-green-300 rounded text-sm sm:text-base"><option value="" disabled selected>{{ t['select_fruit_veggie'] }}</option><option value="no">{{ t['fruit_veggie_no'] }}</option><option value="daily">{{ t['fruit_veggie_daily'] }}</option><option value="rarely">{{ t['fruit_veggie_rarely'] }}</option></select></div>
+                    <div><label class="block text-green-700 font-medium mb-1 text-sm sm:text-base">{{ t['fruit_veggie_label'] }}</label><select id="fruit_veggie_intake" name="fruit_veggie_intake" required class="w-full p-2 border border-green-300 rounded text-sm sm:text-base"><option value="" disabled selected>{{ t['select_fruit_veggie'] }}</option><option value="fruit_veggie_no">{{ t['fruit_veggie_no'] }}</option><option value="fruit_veggie_daily">{{ t['fruit_veggie_daily'] }}</option><option value="fruit_veggie_rarely">{{ t['fruit_veggie_rarely'] }}</option></select></div>
                     <div><label class="block text-green-700 font-medium mb-1 text-sm sm:text-base">{{ t['water_consumption_label'] }}</label><select id="water_consumption" name="water_consumption" required class="w-full p-2 border border-green-300 rounded text-sm sm:text-base"><option value="" disabled selected>{{ t['select_water'] }}</option><option value="water_glass_1">{{ t['water_glass_1'] }}</option><option value="water_glass_2_3">{{ t['water_glass_2_3'] }}</option><option value="water_liter_1">{{ t['water_liter_1'] }}</option><option value="water_liter_1_plus">{{ t['water_liter_1_plus'] }}</option></select></div>
-                    <div><label class="block text-green-700 font-medium mb-1 text-sm sm:text-base">{{ t['oily_sugary_food_label'] }}</label><select id="oily_sugary_food_use" name="oily_sugary_food_use" required class="w-full p-2 border border-green-300 rounded text-sm sm:text-base"><option value="" disabled selected>{{ t['select_oily_sugary'] }}</option><option value="no">{{ t['oily_sugary_no'] }}</option><option value="moderate">{{ t['oily_sugary_moderate'] }}</option><option value="frequent">{{ t['oily_sugary_frequent'] }}</option><option value="daily">{{ t['oily_sugary_daily'] }}</option></select></div>
+                    <div><label class="block text-green-700 font-medium mb-1 text-sm sm:text-base">{{ t['oily_sugary_food_label'] }}</label><select id="oily_sugary_food_use" name="oily_sugary_food_use" required class="w-full p-2 border border-green-300 rounded text-sm sm:text-base"><option value="" disabled selected>{{ t['select_oily_sugary'] }}</option><option value="oily_sugary_no">{{ t['oily_sugary_no'] }}</option><option value="oily_sugary_moderate">{{ t['oily_sugary_moderate'] }}</option><option value="oily_sugary_frequent">{{ t['oily_sugary_frequent'] }}</option><option value="oily_sugary_daily">{{ t['oily_sugary_daily'] }}</option></select></div>
                 </div>
             </div>
             <div id="female-fields" class="bg-white p-6 rounded-lg shadow-md hidden">
@@ -835,6 +841,7 @@ admin_dashboard_template = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthBuddy Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-cyan-50 to-green-100">
     <header class="bg-green-800 text-white p-4 sticky top-0 z-10">
@@ -859,6 +866,40 @@ admin_dashboard_template = """
                 <p><strong>Average Water Intake:</strong> {{ stats.avg_water }} liters</p>
                 <p><strong>Average Sleep Hours:</strong> {{ stats.avg_sleep }} hours</p>
             </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <h2 class="text-lg sm:text-xl font-semibold text-green-800 mb-4">Gender Distribution</h2>
+    <div style="width: 500px; height: 500px; margin: auto;">
+        <canvas id="genderChart"></canvas>
+    </div>
+    <script>
+        const ctx = document.getElementById('genderChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Male', 'Female'],
+                datasets: [{
+                    data: [{{ gender_counts.male }}, {{ gender_counts.female }}],
+                    backgroundColor: ['#36A2EB', '#FF6384'],
+                    borderColor: ['#2A8BBF', '#CC5067'],
+                    borderWidth: 1
+                }]
+            },
+
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Users by Gender'
+                            }
+                        }
+                    }
+                });
+            </script>
         </div>
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-lg sm:text-xl font-semibold text-green-800 mb-4">Filter Records</h2>
